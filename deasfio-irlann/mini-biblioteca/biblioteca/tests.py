@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.db.models import ProtectedError
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from .models import Author, Book, Category
 
@@ -56,3 +56,56 @@ class ViewTests(TestCase):
 
     def test_author_detail_404(self):
         self.assertEqual(self.client.get(reverse("author_detail", args=[9999])).status_code, 404)
+
+    def test_lista_tem_link_para_criar_autor(self):
+        response = self.client.get(reverse("book_list"))
+        self.assertContains(
+            response,
+            f'href="{reverse("author_create")}"',
+        )
+        self.assertContains(response, "Novo autor")
+
+    def test_formulario_novo_autor_mostra_campos_individuais_e_csrf(self):
+        response = self.client.get(reverse("author_create"))
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')
+        self.assertContains(response, "<label for=\"id_name\">Nome:</label>")
+        self.assertContains(
+            response,
+            "<label for=\"id_nationality\">Nacionalidade:</label>",
+        )
+
+    def test_formulario_invalido_exibe_erro_junto_ao_nome(self):
+        response = self.client.post(
+            reverse("author_create"),
+            {"name": "", "nationality": ""},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Este campo é obrigatório.")
+        self.assertEqual(Author.objects.filter(name="").count(), 0)
+
+    def test_cria_autor_sem_nacionalidade_e_redireciona_sem_duplicar(self):
+        response = self.client.post(
+            reverse("author_create"),
+            {"name": "Clarice Lispector", "nationality": ""},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("author_detail", args=[Author.objects.get(name="Clarice Lispector").pk]),
+        )
+        self.assertEqual(Author.objects.filter(name="Clarice Lispector").count(), 1)
+
+        self.client.get(response["Location"])
+        self.assertEqual(Author.objects.filter(name="Clarice Lispector").count(), 1)
+
+    def test_post_sem_token_csrf_retorna_403_e_nao_cria_autor(self):
+        client = Client(enforce_csrf_checks=True)
+        client.get(reverse("author_create"))
+
+        response = client.post(
+            reverse("author_create"),
+            {"name": "Autor sem token", "nationality": ""},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Author.objects.filter(name="Autor sem token").exists())

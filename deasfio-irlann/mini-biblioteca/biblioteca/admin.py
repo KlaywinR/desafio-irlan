@@ -2,7 +2,6 @@ from django.contrib import admin
 from .models import Author, Book, Category
 
 class BookInline(admin.TabularInline):
-    """Livros do autor na página do autor."""
     model = Book.authors.through
     fk_name = "author"
     extra = 1  

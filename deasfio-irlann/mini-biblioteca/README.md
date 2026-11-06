@@ -19,6 +19,19 @@ python manage.py test
 python manage.py runserver
 ```
 
+## Cadastro de autores com formulário Django
+
+Na lista de livros, o link **Novo autor** abre `/autores/novo/`. O formulário usa
+`AuthorForm`, baseado em `ModelForm`: nome é obrigatório e nacionalidade pode
+ficar vazia. Os campos e seus erros são renderizados separadamente no template.
+Após o salvamento, a view redireciona para a página do autor; atualizar essa
+página apenas repete um GET e não cadastra outro registro (padrão POST/Redirect/GET).
+
+O template inclui `{% csrf_token %}`. Com o `CsrfViewMiddleware` ativo, remover
+esse token e enviar o formulário sem ele resulta em **403 Forbidden**; a view não
+é executada e nenhum autor é criado. O teste
+`test_post_sem_token_csrf_retorna_403_e_nao_cria_autor` verifica esse caso.
+
 ## Migrações 
 
 | Migração | O que faz |
