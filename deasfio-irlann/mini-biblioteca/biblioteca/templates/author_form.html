@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Novo autor</title>
+</head>
+<body>
+    <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
+    <h1>Cadastrar autor</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div>
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="field-errors">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div>
+            {{ form.nationality.label_tag }}
+            {{ form.nationality }}
+            {% if form.nationality.errors %}
+                <div class="field-errors">{{ form.nationality.errors }}</div>
+            {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <button type="submit">Salvar autor</button>
+    </form>
+</body>
+</html>
