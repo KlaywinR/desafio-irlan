@@ -18,6 +18,7 @@
 
     {% for book in books %}
         <h3>{{ book.title }}</h3>
+        <p><a href="{% url 'book_edit' book.pk %}">Editar</a></p>
         <p>
             <strong>Ano de Publicação do Livro:</strong> {{ book.year_of_publication }}
         </p>

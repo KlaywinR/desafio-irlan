@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import ProtectedError
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 from .models import Author, Book, Category
 
 class ModelTests(TestCase):
@@ -53,6 +54,10 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("author_detail", args=[self.a2.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Livro Coautoria")
+        self.assertContains(
+            response,
+            f'href="{reverse("book_edit", args=[self.book.pk])}"',
+        )
 
     def test_author_detail_404(self):
         self.assertEqual(self.client.get(reverse("author_detail", args=[9999])).status_code, 404)
@@ -64,6 +69,14 @@ class ViewTests(TestCase):
             f'href="{reverse("author_create")}"',
         )
         self.assertContains(response, "Novo autor")
+        self.assertContains(
+            response,
+            f'href="{reverse("book_create")}"',
+        )
+        self.assertContains(
+            response,
+            f'href="{reverse("book_edit", args=[self.book.pk])}"',
+        )
 
     def test_formulario_novo_autor_mostra_campos_individuais_e_csrf(self):
         response = self.client.get(reverse("author_create"))
@@ -109,3 +122,65 @@ class ViewTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertFalse(Author.objects.filter(name="Autor sem token").exists())
+
+    def test_cria_livro_normaliza_titulo_e_aceita_sem_categoria(self):
+        response = self.client.post(
+            reverse("book_create"),
+            {
+                "title": "  Livro   novo ",
+                "authors": [self.a1.pk],
+                "year_of_publication": 2024,
+                "available": "on",
+            },
+        )
+
+        book = Book.objects.get(title="Livro novo")
+        self.assertRedirects(
+            response,
+            reverse("author_detail", args=[self.a1.pk]),
+        )
+        self.assertEqual(book.categories.count(), 0)
+
+    def test_titulo_curto_e_ano_futuro_sao_exibidos_no_formulario(self):
+        response = self.client.post(
+            reverse("book_create"),
+            {
+                "title": " a ",
+                "authors": [self.a1.pk],
+                "year_of_publication": timezone.localdate().year + 1,
+                "available": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "O título deve ter pelo menos 3 caracteres")
+        self.assertContains(response, "O ano de publicação não pode ser futuro")
+        self.assertEqual(Book.objects.count(), 1)
+
+    def test_edita_livro_existente_e_livro_inexistente_retorna_404(self):
+        response = self.client.get(reverse("book_edit", args=[self.book.pk]))
+
+        self.assertContains(response, "Editar livro")
+        self.assertContains(response, 'value="Livro Coautoria"')
+        self.assertEqual(
+            self.client.get(reverse("book_edit", args=[9999])).status_code,
+            404,
+        )
+
+    def test_salva_edicao_e_redireciona_para_pagina_do_autor(self):
+        response = self.client.post(
+            reverse("book_edit", args=[self.book.pk]),
+            {
+                "title": "Livro atualizado",
+                "authors": [self.a2.pk],
+                "year_of_publication": 2021,
+                "available": "on",
+            },
+        )
+
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, "Livro atualizado")
+        self.assertEqual(
+            response["Location"],
+            reverse("author_detail", args=[self.a2.pk]),
+        )

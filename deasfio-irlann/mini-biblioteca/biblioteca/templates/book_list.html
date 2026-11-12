@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang='en'>
 <head>
     <meta charset='utf-8'>
@@ -7,11 +7,13 @@
 </head>
 <body>
     <h1>Lista de Livros</h1>
-    <p><a href="{% url 'author_create' %}">Novo autor</a></p>
+    <p><a href="{% url 'author_create' %}">Cadastrar Novo Autor</a></p>
+    <p><a href="{% url 'book_create' %}">Cadastrar Novo Livro</a></p>
 
     {% for book in books %}
 
         <h2>{{ book.title }}</h2>
+        <p><a href="{% url 'book_edit' book.pk %}">Editar</a></p>
 
         <p>
             <strong>Autores:</strong>
