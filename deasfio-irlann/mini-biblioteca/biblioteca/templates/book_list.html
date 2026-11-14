@@ -1,30 +1,29 @@
-<DOCTYPE html>
-<html lang='en'>
-<head>
-    <meta charset='utf-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Lista de Livros</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Lista de livros | Mini Biblioteca{% endblock %}
+
+{% block content %}
     <h1>Lista de Livros</h1>
-    <p><a href="{% url 'author_create' %}">Cadastrar Novo Autor</a></p>
-    <p><a href="{% url 'book_create' %}">Cadastrar Novo Livro</a></p>
+    <div class="actions">
+        <a class="button" href="{% url 'book_create' %}">Cadastrar Novo Livro</a>
+        <a class="button secondary" href="{% url 'author_create' %}">Novo autor</a>
+    </div>
 
     {% for book in books %}
-
-        <h2>{{ book.title }}</h2>
-        <p><a href="{% url 'book_edit' book.pk %}">Editar</a></p>
-
-        <p>
-            <strong>Autores:</strong>
-            {% for author in book.authors.all %}
-                <a href="{% url 'author_detail' author.pk %}">{{ author.name }}</a>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
-        </p>
-        <p>
-            <strong>Ano de Publicação do Livro:</strong> {{ book.year_of_publication }}
-        </p>
-
+        <article class="card">
+            <h2>{{ book.title }}</h2>
+            <p>
+                <strong>Autores:</strong>
+                {% for author in book.authors.all %}
+                    <a href="{% url 'author_detail' author.pk %}">{{ author.name }}</a>{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    <span class="muted">Nenhum autor cadastrado</span>
+                {% endfor %}
+            </p>
+            <p><strong>Ano de Publicação:</strong> {{ book.year_of_publication }}</p>
+            <a href="{% url 'book_edit' book.pk %}">Editar livro</a>
+        </article>
+    {% empty %}
+        <p class="card muted">Nenhum livro cadastrado.</p>
     {% endfor %}
-</body>
-</html>
+{% endblock %}

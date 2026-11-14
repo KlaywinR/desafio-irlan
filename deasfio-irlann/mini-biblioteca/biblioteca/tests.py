@@ -56,7 +56,7 @@ class ViewTests(TestCase):
         self.assertContains(response, "Livro Coautoria")
         self.assertContains(
             response,
-            f'href="{reverse("book_edit", args=[self.book.pk])}"',
+            f'href="{reverse("book_edit", args=[self.book.pk])}?author_id={self.a2.pk}"',
         )
 
     def test_author_detail_404(self):
@@ -184,3 +184,21 @@ class ViewTests(TestCase):
             response["Location"],
             reverse("author_detail", args=[self.a2.pk]),
         )
+
+    def test_edita_com_coautoria_e_retorna_ao_autor_de_origem(self):
+        response = self.client.post(
+            f'{reverse("book_edit", args=[self.book.pk])}?author_id={self.a2.pk}',
+            {
+                "title": "Livro atualizado",
+                "authors": [self.a1.pk, self.a2.pk],
+                "year_of_publication": 2021,
+                "available": "on",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("author_detail", args=[self.a2.pk]),
+        )
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.authors.count(), 2)

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Mini Biblioteca{% endblock %}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f5f5;
+            color: #222;
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        header {
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            padding: 16px 24px;
+        }
+
+        .header-content,
+        main {
+            width: min(100% - 32px, 800px);
+            margin: 0 auto;
+        }
+
+        .header-content a {
+            color: #222;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        main {
+            padding: 32px 0;
+        }
+
+        h1,
+        h2,
+        h3 {
+            line-height: 1.25;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .card {
+            margin: 16px 0;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        a {
+            color: #444;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #333;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .button.secondary {
+            background: #fff;
+            color: #333;
+        }
+
+        form {
+            max-width: 560px;
+        }
+
+        form p,
+        .form-field {
+            margin: 0 0 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        input:not([type="checkbox"]),
+        select,
+        textarea {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            background: #fff;
+            color: #222;
+            font: inherit;
+        }
+
+        select[multiple] {
+            min-height: 100px;
+        }
+
+        input[type="checkbox"] {
+            accent-color: #444;
+        }
+
+        button {
+            padding: 9px 14px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .field-errors,
+        .form-errors {
+            margin-top: 4px;
+            color: #333;
+        }
+
+        .field-errors ul,
+        .form-errors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .muted {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="{% url 'book_list' %}">Mini Biblioteca</a>
+        </div>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

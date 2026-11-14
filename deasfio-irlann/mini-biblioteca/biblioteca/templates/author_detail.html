@@ -1,29 +1,24 @@
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-    <meta charset='utf-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>{{ author.name }}</title>
-</head>
-<body>
-    <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
+{% extends "base.html" %}
 
+{% block title %}{{ author.name }} | Mini Biblioteca{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
     <h1>{{ author.name }}</h1>
 
     {% if author.nationality %}
-        <p><strong>Nacionalidade:</strong> {{ author.nationality }}</p>
+        <p class="muted"><strong>Nacionalidade:</strong> {{ author.nationality }}</p>
     {% endif %}
 
     <h2>Livros</h2>
 
     {% for book in books %}
-        <h3>{{ book.title }}</h3>
-        <p><a href="{% url 'book_edit' book.pk %}">Editar</a></p>
-        <p>
-            <strong>Ano de Publicação do Livro:</strong> {{ book.year_of_publication }}
-        </p>
+        <article class="card">
+            <h3>{{ book.title }}</h3>
+            <p><strong>Ano de Publicação:</strong> {{ book.year_of_publication }}</p>
+            <a href="{% url 'book_edit' book.pk %}?author_id={{ author.pk }}">Editar livro</a>
+        </article>
     {% empty %}
-        <p>Este autor ainda não tem livros cadastrados.</p>
+        <p class="card muted">Este autor ainda não tem livros cadastrados.</p>
     {% endfor %}
-</body>
-</html>
+{% endblock %}
