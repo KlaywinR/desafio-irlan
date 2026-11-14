@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_editing %}Editar livro{% else %}Novo livro{% endif %} | Mini Biblioteca{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
+    <h1>{% if is_editing %}Editar livro{% else %}Novo livro{% endif %}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% if is_editing %}Editar livro{% else %}Novo livro{% endif %}</button>
+    </form>
+{% endblock %}

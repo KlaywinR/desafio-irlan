@@ -1,18 +1,15 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Novo autor</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Novo autor | Mini Biblioteca{% endblock %}
+
+{% block content %}
     <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
-    <h1>Cadastrar autor</h1>
+    <h1>Cadastro de Autor</h1>
 
     <form method="post">
         {% csrf_token %}
 
-        <div>
+        <div class="form-field">
             {{ form.name.label_tag }}
             {{ form.name }}
             {% if form.name.errors %}
@@ -20,7 +17,7 @@
             {% endif %}
         </div>
 
-        <div>
+        <div class="form-field">
             {{ form.nationality.label_tag }}
             {{ form.nationality }}
             {% if form.nationality.errors %}
@@ -34,5 +31,4 @@
 
         <button type="submit">Salvar autor</button>
     </form>
-</body>
-</html>
+{% endblock %}

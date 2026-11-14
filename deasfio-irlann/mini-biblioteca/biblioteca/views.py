@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import AuthorForm
+from .forms import AuthorForm, BookForm
 from .models import Author, Book
 
 
@@ -36,3 +36,31 @@ def author_detail(request, pk):
     }
 
     return render(request, "author_detail.html", context)
+
+
+def book_form(request, pk=None):
+    book = get_object_or_404(Book, pk=pk) if pk is not None else None
+    author_id = request.GET.get("author_id", "")
+    return_author = None
+    if author_id.isdecimal():
+        return_author = Author.objects.filter(pk=author_id).first()
+
+    data = request.POST if request.method == "POST" else None
+    form = BookForm(data, instance=book)
+
+    if request.method == "POST" and form.is_valid():
+        book = form.save()
+        if return_author is not None:
+            return redirect("author_detail", pk=return_author.pk)
+
+        author = book.authors.first()
+        return redirect("author_detail", pk=author.pk)
+
+    return render(
+        request,
+        "book_form.html",
+        {
+            "form": form,
+            "is_editing": book is not None,
+        },
+    )
