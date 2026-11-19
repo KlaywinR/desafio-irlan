@@ -46,7 +46,7 @@ def book_form(request, pk=None):
         return_author = Author.objects.filter(pk=author_id).first()
 
     data = request.POST if request.method == "POST" else None
-    form = BookForm(data, instance=book)
+    form = BookForm(data, files=request.FILES, instance=book)
 
     if request.method == "POST" and form.is_valid():
         book = form.save()

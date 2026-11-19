@@ -28,6 +28,7 @@ class BookForm(forms.ModelForm):
             "year_of_publication",
             "pages",
             "isbn",
+            "capa",
             "available",
             "categories",
         ]
@@ -38,6 +39,7 @@ class BookForm(forms.ModelForm):
             "available": "Disponível",
             "pages": "Páginas",
             "isbn": "ISBN",
+            "capa": "Capa",
             "categories": "Categorias",
         }
         widgets = {

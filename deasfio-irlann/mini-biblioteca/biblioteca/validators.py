@@ -11,3 +11,12 @@ def validar_ano_publicacao(ano):
             params={"ano_atual": ano_atual},
         )
 
+
+def validar_tamanho_arquivo(arquivo):
+    limite_em_bytes = 1024 * 1024
+    if arquivo.size > limite_em_bytes:
+        raise ValidationError(
+            "A capa não pode ser maior que 1 MB.",
+            code="arquivo_grande",
+        )
+
