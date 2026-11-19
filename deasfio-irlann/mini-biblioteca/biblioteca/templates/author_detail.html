@@ -15,8 +15,12 @@
     {% for book in books %}
         <article class="card">
             <h3>{{ book.title }}</h3>
+            {% if book.capa %}
+                <img src="{{ book.capa.url }}" alt="Capa de {{ book.title }}" width="160">
+            {% endif %}
             <p><strong>Ano de Publicação:</strong> {{ book.year_of_publication }}</p>
             <a href="{% url 'book_edit' book.pk %}?author_id={{ author.pk }}">Editar livro</a>
+            <a href="{% url 'book_delete' book.pk %}">Excluir livro</a>
         </article>
     {% empty %}
         <p class="card muted">Este autor ainda não tem livros cadastrados.</p>

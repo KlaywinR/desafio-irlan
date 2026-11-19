@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Sobre | Mini Biblioteca{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
+    <h1>Sobre a Mini Biblioteca</h1>
+    <p>Total de livros: {{ total_books }}</p>
+    <p>Livros disponíveis: {{ available_books }}</p>
+{% endblock %}

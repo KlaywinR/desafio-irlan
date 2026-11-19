@@ -26,6 +26,9 @@ class BookForm(forms.ModelForm):
             "title",
             "authors",
             "year_of_publication",
+            "pages",
+            "isbn",
+            "capa",
             "available",
             "categories",
         ]
@@ -34,6 +37,9 @@ class BookForm(forms.ModelForm):
             "authors": "Autores",
             "year_of_publication": "Ano de publicação",
             "available": "Disponível",
+            "pages": "Páginas",
+            "isbn": "ISBN",
+            "capa": "Capa",
             "categories": "Categorias",
         }
         widgets = {
@@ -56,7 +62,7 @@ class BookForm(forms.ModelForm):
         title = " ".join(self.cleaned_data["title"].split())
         if len(title) < 3:
             raise forms.ValidationError(
-                "Sistema: O título da obra deve possuir ao menos 3 caracteres após os espaços extras serem removidos."
+                "O título deve ter pelo menos 3 caracteres."
             )
         return title
 
@@ -64,6 +70,6 @@ class BookForm(forms.ModelForm):
         year = self.cleaned_data["year_of_publication"]
         if year > timezone.localdate().year:
             raise forms.ValidationError(
-                "Sistema: O ano da publicação do livro não pode ser futuro. Por favor, Informe o ano atual ou um ano anterior."
+                "O ano de publicação não pode ser futuro."
             )
         return year

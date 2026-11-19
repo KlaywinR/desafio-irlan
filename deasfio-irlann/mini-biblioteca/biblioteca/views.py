@@ -1,66 +1,114 @@
-from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Count, Q
+from django.urls import reverse, reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 
 from .forms import AuthorForm, BookForm
 from .models import Author, Book
 
 
-def book_list(request):
-    books = Book.objects.prefetch_related("authors")
-
-    context = {
-        "books": books,
-    }
-
-    return render(request, "book_list.html", context)
-
-
-def author_create(request):
-    if request.method == "POST":
-        form = AuthorForm(request.POST)
-        if form.is_valid():
-            author = form.save()
-            return redirect("author_detail", pk=author.pk)
-    else:
-        form = AuthorForm()
-
-    return render(request, "author_form.html", {"form": form})
-
-
-def author_detail(request, pk):
-    author = get_object_or_404(Author, pk=pk)
-    books = author.books.all()
-
-    context = {
-        "author": author,
-        "books": books,
-    }
-
-    return render(request, "author_detail.html", context)
-
-
-def book_form(request, pk=None):
-    book = get_object_or_404(Book, pk=pk) if pk is not None else None
-    author_id = request.GET.get("author_id", "")
-    return_author = None
-    if author_id.isdecimal():
-        return_author = Author.objects.filter(pk=author_id).first()
-
-    data = request.POST if request.method == "POST" else None
-    form = BookForm(data, instance=book)
-
-    if request.method == "POST" and form.is_valid():
-        book = form.save()
-        if return_author is not None:
-            return redirect("author_detail", pk=return_author.pk)
-
-        author = book.authors.first()
-        return redirect("author_detail", pk=author.pk)
-
-    return render(
-        request,
-        "book_form.html",
-        {
-            "form": form,
-            "is_editing": book is not None,
-        },
+def book_counts():
+    return Book.objects.aggregate(
+        total_books=Count("pk"),
+        available_books=Count("pk", filter=Q(available=True)),
     )
+
+
+class BookListView(ListView):
+    model = Book
+    template_name = "book_list.html"
+    context_object_name = "books"
+    ordering = ["title"]
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("authors").order_by("title")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(book_counts())
+        return context
+
+
+class AuthorCreateView(CreateView):
+    model = Author
+    form_class = AuthorForm
+    template_name = "author_form.html"
+    context_object_name = "author"
+    success_url = reverse_lazy("book_list")
+
+    def get_success_url(self):
+        return reverse("author_detail", kwargs={"pk": self.object.pk})
+
+
+class AuthorDetailView(DetailView):
+    model = Author
+    template_name = "author_detail.html"
+    context_object_name = "author"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["books"] = self.object.books.order_by("title").prefetch_related("authors")
+        return context
+
+
+class BookAuthorRedirectMixin:
+    success_url = reverse_lazy("book_list")
+
+    def get_success_url(self):
+        author_id = self.request.GET.get("author_id", "")
+        author = (
+            Author.objects.filter(pk=author_id).first()
+            if author_id.isdecimal()
+            else None
+        )
+        if author is None:
+            author = self.object.authors.first()
+        if author is None:
+            return super().get_success_url()
+        return reverse("author_detail", kwargs={"pk": author.pk})
+
+
+class BookCreateView(BookAuthorRedirectMixin, CreateView):
+    model = Book
+    form_class = BookForm
+    template_name = "book_form.html"
+    context_object_name = "book"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_editing"] = False
+        return context
+
+
+class BookUpdateView(BookAuthorRedirectMixin, UpdateView):
+    model = Book
+    form_class = BookForm
+    template_name = "book_form.html"
+    context_object_name = "book"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_editing"] = True
+        return context
+
+
+class BookDeleteView(DeleteView):
+    model = Book
+    template_name = "livro_confirm_delete.html"
+    context_object_name = "book"
+    success_url = reverse_lazy("book_list")
+
+
+class AboutView(TemplateView):
+    template_name = "about.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(book_counts())
+        return context
