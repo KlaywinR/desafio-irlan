@@ -104,6 +104,24 @@ class CoverUploadTests(TestCase):
         self.assertFalse(invalid_image.is_valid())
         self.assertIn("capa", invalid_image.errors)
 
+    def test_missing_file_data_is_accepted_for_optional_cover(self):
+        author = Author.objects.create(name="Autora")
+        form = BookForm(
+            {
+                "title": "Livro sem arquivo",
+                "authors": [author.pk],
+                "year_of_publication": 2000,
+                "available": "on",
+            }
+        )
+
+        self.assertTrue(form.is_valid())
+        self.assertFalse(form.cleaned_data["capa"])
+        self.assertContains(
+            self.client.get(reverse("book_create")),
+            'enctype="multipart/form-data"',
+        )
+
     def test_cover_upload_is_saved_and_rendered(self):
         author = Author.objects.create(name="Autora")
         response = self.client.post(
@@ -324,3 +342,44 @@ class ViewTests(TestCase):
         )
         self.book.refresh_from_db()
         self.assertEqual(self.book.authors.count(), 2)
+
+    def test_lista_ordena_por_titulo_e_informa_contagens(self):
+        Book.objects.create(
+            title="A primeira obra",
+            year_of_publication=2001,
+            available=False,
+        )
+
+        response = self.client.get(reverse("book_list"))
+
+        self.assertEqual(
+            list(response.context["books"].values_list("title", flat=True)),
+            ["A primeira obra", "Livro Coautoria"],
+        )
+        self.assertEqual(response.context["total_books"], 2)
+        self.assertEqual(response.context["available_books"], 1)
+
+    def test_sobre_exibe_total_e_livros_disponiveis(self):
+        Book.objects.create(
+            title="Indisponível",
+            year_of_publication=2001,
+            available=False,
+        )
+
+        response = self.client.get(reverse("sobre"))
+
+        self.assertContains(response, "Total de livros: 2")
+        self.assertContains(response, "Livros disponíveis: 1")
+
+    def test_exclusao_so_ocorre_no_post_e_retorna_404_para_livro_inexistente(self):
+        delete_url = reverse("book_delete", args=[self.book.pk])
+        response = self.client.get(delete_url)
+
+        self.assertContains(response, "Tem certeza de que deseja excluir")
+        self.assertTrue(Book.objects.filter(pk=self.book.pk).exists())
+        self.assertEqual(self.client.get(reverse("book_delete", args=[9999])).status_code, 404)
+
+        response = self.client.post(delete_url)
+
+        self.assertRedirects(response, reverse("book_list"))
+        self.assertFalse(Book.objects.filter(pk=self.book.pk).exists())
