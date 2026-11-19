@@ -1,9 +1,54 @@
 from django.db import transaction
 from django.db.models import ProtectedError
+from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from .models import Author, Book, Category
+
+
+class BookValidationTests(TestCase):
+    def make_book(self, **overrides):
+        values = {
+            "title": "Livro válido",
+            "year_of_publication": 2000,
+            "pages": 1,
+            "isbn": "",
+        }
+        values.update(overrides)
+        return Book(**values)
+
+    def test_title_requires_at_least_three_characters(self):
+        with self.assertRaises(ValidationError):
+            self.make_book(title="AB").full_clean()
+
+    def test_publication_year_is_between_1450_and_current_year(self):
+        self.make_book(year_of_publication=1450).full_clean()
+        self.make_book(year_of_publication=timezone.localdate().year).full_clean()
+
+        with self.assertRaises(ValidationError):
+            self.make_book(year_of_publication=1449).full_clean()
+        with self.assertRaises(ValidationError):
+            self.make_book(year_of_publication=timezone.localdate().year + 1).full_clean()
+
+    def test_pages_are_optional_and_limited_to_1_through_5000(self):
+        self.make_book(pages=None).full_clean()
+        self.make_book(pages=5000).full_clean()
+
+        with self.assertRaises(ValidationError):
+            self.make_book(pages=0).full_clean()
+        with self.assertRaises(ValidationError):
+            self.make_book(pages=5001).full_clean()
+
+    def test_isbn_is_optional_but_requires_thirteen_digits(self):
+        self.make_book(isbn="").full_clean()
+        self.make_book(isbn="1234567890123").full_clean()
+
+        with self.assertRaises(ValidationError):
+            self.make_book(isbn="123456789012").full_clean()
+        with self.assertRaises(ValidationError):
+            self.make_book(isbn="123456789012a").full_clean()
+
 
 class ModelTests(TestCase):
     def setUp(self):
