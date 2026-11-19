@@ -21,16 +21,16 @@ python manage.py runserver
 
 ## Cadastro de autores com formulário Django
 
-Na lista de livros, o link **Novo autor** abre `/autores/novo/`. O formulário usa
-`AuthorForm`, baseado em `ModelForm`: nome é obrigatório e nacionalidade pode
+Na lista de livros, o link Novo autor abre /autores/novo/. O formulário usa
+AuthorForm, baseado em ModelForm: nome é obrigatório e nacionalidade pode
 ficar vazia. Os campos e seus erros são renderizados separadamente no template.
 Após o salvamento, a view redireciona para a página do autor; atualizar essa
 página apenas repete um GET e não cadastra outro registro (padrão POST/Redirect/GET).
 
-O template inclui `{% csrf_token %}`. Com o `CsrfViewMiddleware` ativo, remover
-esse token e enviar o formulário sem ele resulta em **403 Forbidden**; a view não
+O template inclui {% csrf_token %}. Com o CsrfViewMiddleware ativo, remover
+esse token e enviar o formulário sem ele resulta em 403 Forbidden; a view não
 é executada e nenhum autor é criado. O teste
-`test_post_sem_token_csrf_retorna_403_e_nao_cria_autor` verifica esse caso.
+"test_post_sem_token_csrf_retorna_403_e_nao_cria_autor" verifica esse caso.
 
 ## Migrações 
 
@@ -90,7 +90,7 @@ Como garantir ≥ 1 autor o banco?
 
 ## Validações, capas e views
 
-- O modelo valida título, ano, páginas e ISBN. As capas são imagens opcionais salvas em `MEDIA_ROOT/capas/`; em desenvolvimento, `MEDIA_URL` é servido pelo `config/urls.py` enquanto `DEBUG=True`.
-- A listagem e o detalhe do autor exibem capas. O formulário de livro envia arquivos com `multipart/form-data`; o modelo limita o tamanho a 1 MB e aceita extensões jpg, jpeg e png, além de validar o conteúdo como imagem.
-- As páginas de livros e autores usam Class-Based Views. A exclusão pede confirmação e só ocorre via POST. `/sobre/` informa o total de livros e quantos estão disponíveis.
-- Em produção, configure o servidor ou storage de mídia para servir `MEDIA_ROOT`; o servidor de desenvolvimento do Django não deve servir uploads em produção.
+- O modelo valida título, ano, páginas e ISBN. As capas são imagens opcionais salvas em MEDIA_ROOT/capas/; em desenvolvimento, MEDIA_URL é servido pelo config/urls.py enquanto DEBUG=True.
+- A listagem e o detalhe do autor exibem capas. O formulário de livro envia arquivos com multipart/form-data; o modelo limita o tamanho a 1 MB e aceita extensões jpg, jpeg e png, além de validar o conteúdo como imagem.
+- As páginas de livros e autores usam Class-Based Views. A exclusão pede confirmação e só ocorre via POST. /sobre/ informa o total de livros e quantos estão disponíveis.
+- Em produção, configure o servidor ou storage de mídia para servir MEDIA_ROOT; o servidor de desenvolvimento do Django não deve servir uploads em produção.
