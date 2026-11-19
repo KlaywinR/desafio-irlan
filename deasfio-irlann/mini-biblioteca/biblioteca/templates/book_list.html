@@ -12,6 +12,9 @@
     {% for book in books %}
         <article class="card">
             <h2>{{ book.title }}</h2>
+            {% if book.capa %}
+                <img src="{{ book.capa.url }}" alt="Capa de {{ book.title }}" width="160">
+            {% endif %}
             <p>
                 <strong>Autores:</strong>
                 {% for author in book.authors.all %}

@@ -1,10 +1,18 @@
+from io import BytesIO
+import tempfile
+
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.core.exceptions import ValidationError
-from django.test import Client, TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
+
+from .forms import BookForm
 from .models import Author, Book, Category
+from .validators import validar_tamanho_arquivo
 
 
 class BookValidationTests(TestCase):
@@ -48,6 +56,75 @@ class BookValidationTests(TestCase):
             self.make_book(isbn="123456789012").full_clean()
         with self.assertRaises(ValidationError):
             self.make_book(isbn="123456789012a").full_clean()
+
+
+class CoverUploadTests(TestCase):
+    def setUp(self):
+        self.media_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.media_dir.cleanup)
+        override = override_settings(MEDIA_ROOT=self.media_dir.name)
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def make_image(self, name="capa.png", image_format="PNG"):
+        image_bytes = BytesIO()
+        Image.new("RGB", (2, 2), color="red").save(image_bytes, format=image_format)
+        return SimpleUploadedFile(
+            name,
+            image_bytes.getvalue(),
+            content_type=f"image/{image_format.lower()}",
+        )
+
+    def test_cover_size_limit_is_one_megabyte(self):
+        validar_tamanho_arquivo(SimpleUploadedFile("capa.jpg", b"x" * (1024 * 1024)))
+        with self.assertRaises(ValidationError):
+            validar_tamanho_arquivo(
+                SimpleUploadedFile("capa.jpg", b"x" * (1024 * 1024 + 1))
+            )
+
+    def test_cover_must_be_an_allowed_image(self):
+        author = Author.objects.create(name="Autora")
+        form_data = {
+            "title": "Livro com capa",
+            "authors": [author.pk],
+            "year_of_publication": 2000,
+            "available": "on",
+        }
+
+        invalid_extension = BookForm(form_data, {"capa": self.make_image("capa.gif")})
+        self.assertFalse(invalid_extension.is_valid())
+        self.assertIn("capa", invalid_extension.errors)
+
+        invalid_content = SimpleUploadedFile(
+            "capa.png",
+            b"isto nao e uma imagem",
+            content_type="image/png",
+        )
+        invalid_image = BookForm(form_data, {"capa": invalid_content})
+        self.assertFalse(invalid_image.is_valid())
+        self.assertIn("capa", invalid_image.errors)
+
+    def test_cover_upload_is_saved_and_rendered(self):
+        author = Author.objects.create(name="Autora")
+        response = self.client.post(
+            reverse("book_create"),
+            {
+                "title": "Livro com capa",
+                "authors": [author.pk],
+                "year_of_publication": 2000,
+                "available": "on",
+                "capa": self.make_image(),
+            },
+        )
+
+        book = Book.objects.get(title="Livro com capa")
+        self.assertRedirects(response, reverse("author_detail", args=[author.pk]))
+        self.assertTrue(book.capa.name.startswith("capas/"))
+        self.assertContains(self.client.get(reverse("book_list")), book.capa.url)
+        self.assertContains(
+            self.client.get(reverse("author_detail", args=[author.pk])),
+            book.capa.url,
+        )
 
 
 class ModelTests(TestCase):

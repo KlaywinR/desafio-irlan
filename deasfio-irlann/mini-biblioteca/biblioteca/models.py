@@ -3,13 +3,14 @@ from django.db.models import Count, ProtectedError
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.core.validators import (
+    FileExtensionValidator,
     MaxValueValidator,
     MinLengthValidator,
     MinValueValidator,
     RegexValidator,
 )
 
-from .validators import validar_ano_publicacao
+from .validators import validar_ano_publicacao, validar_tamanho_arquivo
 
 
 class Author(models.Model):
@@ -62,6 +63,15 @@ class Book(models.Model):
         max_length=13,
         validators=[
             RegexValidator(r"^\d{13}$", "O ISBN deve possuir exatamente 13 dígitos numéricos."),
+        ],
+    )
+    capa = models.ImageField(
+        "Capa",
+        upload_to="capas/",
+        blank=True,
+        validators=[
+            validar_tamanho_arquivo,
+            FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png"]),
         ],
     )
 
