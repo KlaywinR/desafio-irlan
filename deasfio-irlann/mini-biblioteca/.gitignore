@@ -9,6 +9,7 @@ venv/
 
 .vscode/
 .idea/
+media/
 
 .DS_Store
 Thumbs.db
