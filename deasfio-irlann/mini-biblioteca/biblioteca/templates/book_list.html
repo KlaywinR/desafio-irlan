@@ -7,6 +7,7 @@
     <div class="actions">
         <a class="button" href="{% url 'book_create' %}">Cadastrar Novo Livro</a>
         <a class="button secondary" href="{% url 'author_create' %}">Novo autor</a>
+        <a class="button secondary" href="{% url 'sobre' %}">Sobre</a>
     </div>
 
     {% for book in books %}
@@ -25,6 +26,7 @@
             </p>
             <p><strong>Ano de Publicação:</strong> {{ book.year_of_publication }}</p>
             <a href="{% url 'book_edit' book.pk %}">Editar livro</a>
+            <a href="{% url 'book_delete' book.pk %}">Excluir livro</a>
         </article>
     {% empty %}
         <p class="card muted">Nenhum livro cadastrado.</p>

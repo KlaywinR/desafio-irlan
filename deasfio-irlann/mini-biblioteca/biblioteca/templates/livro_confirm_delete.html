@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Excluir {{ book.title }} | Mini Biblioteca{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'book_list' %}">&larr; Voltar para a lista de livros</a></p>
+    <h1>Excluir livro</h1>
+    <p>Tem certeza de que deseja excluir "{{ book.title }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Confirmar exclusão</button>
+        <a href="{% url 'book_list' %}">Cancelar</a>
+    </form>
+{% endblock %}

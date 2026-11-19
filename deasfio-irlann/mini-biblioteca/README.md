@@ -86,4 +86,11 @@ Como garantir ≥ 1 autor o banco?
  
 2. Apagar autor: um sinal pre_delete em Author consulta author.exclusive_books() - livros em que ele é um único autor e lança ProtecterError se houver algum. Vale também para o shell em scripts. No admim, o botao de Apagar some para o autor.
  
-3. Inline do autor com can_delete = False: desvincular por ali burlaria a regra. Para tirar um autor de um livro  edita-se o livro, onde o formulário valida. 
+3. Inline do autor com can_delete = False: desvincular por ali burlaria a regra. Para tirar um autor de um livro  edita-se o livro, onde o formulário valida.
+
+## Validações, capas e views
+
+- O modelo valida título, ano, páginas e ISBN. As capas são imagens opcionais salvas em `MEDIA_ROOT/capas/`; em desenvolvimento, `MEDIA_URL` é servido pelo `config/urls.py` enquanto `DEBUG=True`.
+- A listagem e o detalhe do autor exibem capas. O formulário de livro envia arquivos com `multipart/form-data`; o modelo limita o tamanho a 1 MB e aceita extensões jpg, jpeg e png, além de validar o conteúdo como imagem.
+- As páginas de livros e autores usam Class-Based Views. A exclusão pede confirmação e só ocorre via POST. `/sobre/` informa o total de livros e quantos estão disponíveis.
+- Em produção, configure o servidor ou storage de mídia para servir `MEDIA_ROOT`; o servidor de desenvolvimento do Django não deve servir uploads em produção.
