@@ -56,34 +56,34 @@ Dois ajustes na FK dentro da 0005:
 
 ### 1. Que dados se perdem quando a migração é revertida? Por quê?
 
-Perdem-se os coautores. Reverter significa voltar de "um livro tem vários autores" para
-"um livro tem um autor. Uma ForeignKey guarda um único valor; não há onde pôr o 2º e o 3º autor.
-A função de volta copiar_m2m_para_fk guarda apenas o priemeiro valor vinculado ao livro- pela oredem em que os vinculos foram criados; ManytoMany não possui noção do autor principal, onde descarta os demais vínculos.
+Os coautores se perdem. Reverter significa voltar de "um livro tem vários autores" para
+"um livro tem um autor. Uma FK guarda um único valor; não há onde pôr o 2º e o 3º autor.
+A função de volta copiar_m2m_para_fk guarda apenas o priemeiro valor vinculado ao livro- pela ordem em que os vinculos foram criados; ManytoMany não possui noção do autor principal, onde descarta os demais vínculos.
 
 
 Dois detalhes que também alteram os dados na volta:
 
-- Livro sem nenhum autor ossível com ManyToMany: a FK antiga era obrigatória, então ele recebe um autor-coringa "Autor desconhecido". A informação original "sem autor" se perde.
+- Livro sem nenhum autor possível com ManyToMany: a FK antiga era obrigatória, então ele recebe um "Autor desconhecido". A informação original "sem autor" se perde.
 - A reversão não é uma inversa perfeita: migrate → reverter → migrate de novo não recupera coautores perdidos.
 
-O que não se perde: os registros de Author, os Book e os vínculos de livros com um único autor.
-(Testado: um livro com 3 autores voltou com 1; um livro sem autor voltou com "Autor desconhecido".)
+O que não se perde? 
+-  os registros de Author.
+-  os Livros.
+-  os vínculos de livros com um único autor.
 
 ### 2. O que acontece com um livro quando o seu único autor é apagado? Como garantir pelo menos um autor?
 
-O que acontece (sem proteção): o livro continua existindo, sem nenhum autor. No ManyToMany não há ondelete no campo: o que existe é a tabela intermediária iblioteca_book_author, cujas linhas são apagadas e cascata junto com o autor. O livro não é afetado, e fica sozinho com a coluna "Autores" vazia. Ademais, nenhum erro é lançado.
+O que acontec? 
+- o livro continua existindo; com 0 autores. Emo ManyToMany não há on-delete no campo: o que existe é a tabela intermediária biblioteca_book_author; ccujas linhas são apagadas em formato de cascata junto de  autor. O livro não é afetado, e fica sozinho com a coluna "Autores" vazia. Ademais, nenhum erro é  mostrado.
 
-Como garantir ≥ 1 autor o banco, sozinho, não consegue: não existe NOT NULL para "tem ao menos uma linha na tabela intermediári. A garantia vem em camadas, todas implementadas aqui:
+Como garantir ≥ 1 autor o banco? 
+- O banco sendo sozinho -- não consegue em momento nenhum.
+- Não existe NOT NULL para "tem ao menos uma linha na tabela intermediária. 
+- A garantia vem em camadas, todas implementadas: 
 
-1. Formulários: authors não tem blank=True, então admin e ModelForm exigem ao menos 1 autor ao criar ou editar um book.
+1. Formulários:
+ authors não tem blank=True, então admin e ModelForm exigem ao menos 1 autor ao criar ou editar um book.
  
 2. Apagar autor: um sinal pre_delete em Author consulta author.exclusive_books() - livros em que ele é um único autor e lança ProtecterError se houver algum. Vale também para o shell em scripts. No admim, o botao de Apagar some para o autor.
  
 3. Inline do autor com can_delete = False: desvincular por ali burlaria a regra. Para tirar um autor de um livro  edita-se o livro, onde o formulário valida. 
-
-
-## Testes
-
-```bash
-python manage.py test
-```

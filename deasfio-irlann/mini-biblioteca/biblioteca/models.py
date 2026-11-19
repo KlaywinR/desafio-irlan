@@ -3,6 +3,11 @@ from django.db.models import Count, ProtectedError
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
+from .validators import validar_ano_publicacao
+from django.core.validators import (
+    MaxValueValidator, MinLengthValidator, MinValueValidator, RegexValidator
+)
+
 class Author(models.Model):
     name = models.CharField(max_length=120)
     nationality = models.CharField(max_length=60, blank=True)
@@ -30,12 +35,31 @@ class Category(models.Model):
         return self.name
 
 class Book(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField(
+    max_length=200,
+    validators = [MinLengthValidator(3,"O titulo deve possuir pelo menos 3 caracteres")]
+    )
     authors = models.ManyToManyField(Author, related_name="books")
     categories = models.ManyToManyField(Category, blank=True, related_name="books")
     year_of_publication = models.IntegerField()
     available = models.BooleanField(default=True)
-
+    pages = models.PositiveIntegerField(
+        "Páginas",
+        null = True,
+        blank = True,
+        validators = [
+            MinValueValidator(1, "O livro deve ter pelo menos 1 página."),
+            MaxValueValidator(5, "O livro pode possuir no máximo 5 páginas."),
+        ],
+    )
+    isbn = models.CharField(
+        "ISBN",
+        blank= True,
+        max_length= 13,
+        validators= [
+            RegexValidator(r"^\d{13}$", "o ISBN deve posssuir exatamente 13 dígitos numéricos"),      
+        ]    
+    )
     def __str__(self):
         return self.title
 
