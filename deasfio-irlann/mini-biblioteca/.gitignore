@@ -6,6 +6,7 @@ venv/
 
 .env
 .env.*
+!.env.example
 
 .vscode/
 .idea/
@@ -13,3 +14,10 @@ media/
 
 .DS_Store
 Thumbs.db
+
+# Bancos locais e dumps de dados (podem conter dados e hashes de senha)
+db.sqlite3
+db.backup.sqlite3
+*.sqlite3
+dados_*.json
+sqlite_dump.json
